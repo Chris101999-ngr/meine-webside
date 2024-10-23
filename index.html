@@ -3,10 +3,215 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meine Webseite</title>
+    <title>SEPA-Lastschriftmandat - Katholische Jugend Neuengrün</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        h1, h2 {
+            color: #333;
+            text-align: center;
+        }
+        form {
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            max-width: 600px;
+            margin: auto;
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px;
+        }
+        input, textarea {
+            width: calc(100% - 16px); /* 100% minus padding */
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        #signatureCanvas {
+            border: 1px solid #ccc;
+            background-color: #fff;
+            width: 100%;
+            height: 150px;
+        }
+        .signature-container {
+            margin: 10px 0;
+        }
+        .footer {
+            font-size: 10px;
+            color: #666;
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
-    <h1>Willkommen auf meiner Webseite!</h1>
-    <p>Dies ist eine einfache Webseite, gehostet auf GitHub Pages.</p>
+
+    <h1>SEPA-Lastschriftmandat</h1>
+    <h2>Katholische Jugend Neuengrün</h2>
+
+    <p>Monatsbeitrag: <strong>5€</strong></p>
+    <p>Bitte füllen Sie das folgende Formular aus, um Ihr Lastschriftmandat zu erteilen.</p>
+
+    <form id="mandatForm">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required>
+
+        <label for="vorname">Vorname:</label>
+        <input type="text" id="vorname" name="vorname" required>
+
+        <label for="adresse">Adresse:</label>
+        <input type="text" id="adresse" name="adresse" required>
+
+        <label for="plz">Postleitzahl:</label>
+        <input type="text" id="plz" name="plz" required>
+
+        <label for="ort">Ort:</label>
+        <input type="text" id="ort" name="ort" required>
+
+        <label for="iban">IBAN:</label>
+        <input type="text" id="iban" name="iban" required>
+
+        <label for="bic">BIC:</label>
+        <input type="text" id="bic" name="bic" required>
+
+        <label for="rechtlicheHinweise">Rechtliche Hinweise:</label>
+        <textarea id="rechtlicheHinweise" name="rechtlicheHinweise" rows="4" readonly>
+        Hiermit ermächtige ich die Katholische Jugend Neuengrün, die von mir zu entrichtenden Zahlungen per Lastschrift einzuziehen. 
+        Ich habe das Recht, innerhalb von acht Wochen, beginnend mit dem Belastungsdatum, 
+        die Erstattung des belasteten Betrages zu verlangen. 
+        Es gelten die allgemeinen Geschäftsbedingungen der Katholischen Jugend Neuengrün.
+        </textarea>
+
+        <label for="signature">Unterschrift:</label>
+        <div class="signature-container">
+            <canvas id="signatureCanvas"></canvas>
+            <button type="button" id="clearSignature">Unterschrift löschen</button>
+        </div>
+
+        <button type="submit">SEPA-Lastschriftmandat speichern</button>
+    </form>
+
+    <div class="footer">
+        <p>Katholische Jugend Neuengrün</p>
+        <p>Kontakt: info@kjneuengruen.de | Tel: 01234/567890</p>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+        const { jsPDF } = window.jspdf;
+
+        // Unterschrifts-Canvas
+        const canvas = document.getElementById('signatureCanvas');
+        const ctx = canvas.getContext('2d');
+        let drawing = false;
+
+        // Canvas-Größe festlegen
+        canvas.width = canvas.clientWidth;
+        canvas.height = canvas.clientHeight;
+
+        // Zeichnen der Unterschrift
+        canvas.addEventListener('mousedown', (e) => {
+            drawing = true;
+            ctx.beginPath();
+            ctx.moveTo(e.offsetX, e.offsetY); // Startpunkt setzen
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (drawing) {
+                ctx.lineTo(e.offsetX, e.offsetY);
+                ctx.stroke();
+            }
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            drawing = false;
+            ctx.closePath(); // Schließe den Pfad, wenn das Zeichnen beendet wird
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            drawing = false;
+        });
+
+        document.getElementById('clearSignature').addEventListener('click', () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        });
+
+        document.getElementById('mandatForm').onsubmit = function(event) {
+            event.preventDefault(); // Verhindert das Standardverhalten des Formulars
+
+            // Formulardaten sammeln
+            const formData = new FormData(this);
+
+            // Vorname und Nachname aus dem Formular abrufen
+            const vorname = document.getElementById('vorname').value;  // Wert von Vorname
+            const nachname = document.getElementById('name').value;    // Wert von Nachname
+
+            // Überprüfen, ob Vorname und Nachname korrekt abgerufen werden
+            console.log("Vorname: " + vorname);
+            console.log("Nachname: " + nachname);
+
+            // Unterschrift als Bild speichern
+            const signatureDataURL = canvas.toDataURL();
+
+            // PDF erstellen
+            const pdf = new jsPDF();
+            pdf.setFontSize(12);
+
+            // Füge die gesammelten Formulardaten zur PDF hinzu
+            let data = "SEPA-Lastschriftmandat\n\n";
+            const lineHeight = 10; // Zeilenhöhe für die Textzeilen
+            let currentY = 10; // Startposition für den Text
+
+            formData.forEach((value, key) => {
+                data += `${key.charAt(0).toUpperCase() + key.slice(1)}: ${value}\n`;
+            });
+
+            data.split('\n').forEach((line) => {
+                pdf.text(line, 10, currentY);
+                currentY += lineHeight; // Zeilenhöhe erhöhen
+            });
+
+            // Unterschrift hinzufügen
+            pdf.addImage(signatureDataURL, 'PNG', 10, currentY + 10, 180, 40); // Unterschrift hinzufügen
+            
+            // Layout anpassen
+            pdf.setFontSize(14);
+            pdf.text('SEPA-Lastschriftmandat', 10, 20);
+            pdf.text('Katholische Jugend Neuengrün', 10, 30);
+            pdf.text('Monatsbeitrag: 5€', 10, 40);
+            pdf.line(10, 45, 200, 45); // Horizontale Linie
+            
+            // Footer hinzufügen
+            pdf.setFontSize(10);
+            pdf.text('Kontakt: info@kjneuengruen.de | Tel: 01234/567890', 10, 280);
+            pdf.setFontSize(8);
+            pdf.text('Dies ist ein automatisch generiertes Dokument.', 10, 290);
+
+            // Dynamischer Dateiname mit Vor- und Nachnamen
+            const fileName = `sepa_lastschriftmandat_${vorname}_${nachname}.pdf`;
+
+            // PDF speichern mit dem dynamischen Dateinamen
+            pdf.save(fileName); 
+        };
+    </script>
 </body>
 </html>
